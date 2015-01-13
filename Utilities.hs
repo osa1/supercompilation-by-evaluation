@@ -31,7 +31,7 @@ import Data.Time.Clock.POSIX (getPOSIXTime)
 
 import Debug.Trace
 
-import Text.PrettyPrint.HughesPJClass hiding (render, int, char)
+import Text.PrettyPrint.HughesPJClass hiding (render, int, char, first)
 import qualified Text.PrettyPrint.HughesPJClass as Pretty
 
 import System.IO

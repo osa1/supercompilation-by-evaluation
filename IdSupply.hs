@@ -24,7 +24,7 @@ import System.IO.Unsafe ( unsafePerformIO )
 
 -- | Unique identifiers are of type 'Id' and can be hashed to an 'Int'
 --   usning the function 'hashedId'.
-newtype Id = Id { hashedId :: Int }
+newtype Id = Id { hashedId :: Int } deriving (Eq, Ord)
 
 -- | Supplies for unique identifiers are of type 'IdSupply' and can be
 --   split into two new supplies or yield a unique identifier.
@@ -57,16 +57,6 @@ splitIdSupplyL ids = ids1 : splitIdSupplyL ids2
 -- | Yields the unique identifier from a supply.
 idFromSupply :: IdSupply -> Id
 idFromSupply (IdSupply n _ _) = Id (I# n)
-
-instance Eq Id where Id (I# x) == Id (I# y) = x ==# y
-
-instance Ord Id
- where
-  Id (I# x) <  Id (I# y) = x <#  y
-  Id (I# x) <= Id (I# y) = x <=# y
-
-  compare (Id (I# x)) (Id (I# y)) =
-   if x ==# y then EQ else if x <# y then LT else GT
 
 instance Show Id
  where

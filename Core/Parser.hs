@@ -30,7 +30,10 @@ parse path = do
     wrapper <- if has_wrapper then readFile wrapper_path >>= cpp else return ""
     
     -- Return parsed .core file
-    return (wrapper, moduleCore . LHE.fromParseResult . LHE.parseFileContentsWithMode (LHE.defaultParseMode { LHE.parseFilename = path, LHE.extensions = [LHE.CPP, LHE.MagicHash] }) $ contents)
+    return (wrapper,
+            moduleCore $ LHE.fromParseResult $ LHE.parseFileContentsWithMode
+              (LHE.defaultParseMode { LHE.parseFilename = path, LHE.extensions = [LHE.EnableExtension LHE.CPP, LHE.EnableExtension LHE.MagicHash] })
+              contents)
   where cpp = runCpphs (defaultCpphsOptions { boolopts = (boolopts defaultCpphsOptions) { locations = False }, defines = ("SUPERCOMPILE", "1") : defines defaultCpphsOptions }) path
 
 
@@ -153,7 +156,7 @@ declCore (LHE.FunBind [LHE.Match _loc n pats _mb_type@Nothing (LHE.UnGuardedRhs 
     xes <- declsCore where_decls
     e <- expCore e
     return [(x, lambdas ys $ build $ bind xes e)]
-declCore (LHE.PatBind _loc pat _mb_ty@Nothing (LHE.UnGuardedRhs e) _binds@(LHE.BDecls where_decls)) = do
+declCore (LHE.PatBind _loc pat (LHE.UnGuardedRhs e) _binds@(LHE.BDecls where_decls)) = do
     let (x, bound_ns, build) = patCore pat
     xes <- declsCore where_decls
     e <- expCore e
@@ -172,7 +175,7 @@ expCore (LHE.Let (LHE.BDecls binds) e) = do
     fmap (bind xes) $ expCore e
 expCore (LHE.If e1 e2 e3) = expCore e1 >>= \e1 -> liftM2 (if_ e1) (expCore e2) (expCore e3)
 expCore (LHE.Case e alts) = expCore e >>= \e -> fmap (case_ e) (mapM altCore alts)
-expCore (LHE.Tuple es) = mapM expCore es >>= flip nameThem (return . tuple)
+expCore (LHE.Tuple _ es) = mapM expCore es >>= flip nameThem (return . tuple)
 expCore (LHE.Paren e) = expCore e
 expCore (LHE.List es) = mapM expCore es >>= list
 expCore (LHE.Lambda _ ps e) = expCore e >>= \e -> return $ lambdas xs $ build e
@@ -191,7 +194,7 @@ literalCore (LHE.Char c) = fmap var $ charWrapper c
 literalCore (LHE.String s) = mapM (literalCore . LHE.Char) s >>= list
 
 altCore :: LHE.Alt -> ParseM Alt
-altCore (LHE.Alt _loc pat (LHE.UnGuardedAlt e) (LHE.BDecls binds)) = do
+altCore (LHE.Alt _loc pat (LHE.UnGuardedRhs e) (LHE.BDecls binds)) = do
     xes <- declsCore binds
     e <- expCore e
     return (altcon, build (bind xes e))
@@ -200,10 +203,11 @@ altCore (LHE.Alt _loc pat (LHE.UnGuardedAlt e) (LHE.BDecls binds)) = do
 altPatCore :: LHE.Pat -> (AltCon, Term -> Term)
 altPatCore (LHE.PApp qname pats)           = dataAlt (qNameDataCon qname) (patCores pats)
 altPatCore (LHE.PInfixApp pat1 qname pat2) = dataAlt (qNameDataCon qname) (patCores [pat1, pat2])
-altPatCore (LHE.PTuple [pat1, pat2])       = dataAlt pairDataCon (patCores [pat1, pat2])
+altPatCore (LHE.PTuple _ [pat1, pat2])       = dataAlt pairDataCon (patCores [pat1, pat2])
 altPatCore (LHE.PParen pat)                = altPatCore pat
 altPatCore (LHE.PList [])                  = dataAlt nilDataCon ([], [], id)
-altPatCore (LHE.PLit (LHE.Int i))          = (LiteralAlt (Int i), id)
+altPatCore (LHE.PLit LHE.Signless (LHE.Int i)) = (LiteralAlt (Int i), id)
+altPatCore (LHE.PLit LHE.Negative (LHE.Int i)) = (LiteralAlt (Int (- i)), id)
 altPatCore LHE.PWildCard                   = (DefaultAlt Nothing, id)
 altPatCore p = panic "altPatCore" (text $ show p)
 
@@ -255,7 +259,7 @@ patCore (LHE.PVar n)    = (x, [x], id)
 patCore LHE.PWildCard   = (x, [x], id)
   where x = name "_"
 patCore (LHE.PParen p)  = patCore p
-patCore (LHE.PTuple ps) = case tupleDataCon (length ps) of
+patCore (LHE.PTuple _ ps) = case tupleDataCon (length ps) of
     Nothing | [p] <- ps -> patCore p
     Just dc -> (n', bound_ns', \e -> case_ (var n') [(DataAlt dc ns', build e)])
       where n' = name "tup"
