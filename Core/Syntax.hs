@@ -1,4 +1,6 @@
-{-# LANGUAGE PatternGuards, ViewPatterns, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances, PatternGuards, TypeSynonymInstances,
+             ViewPatterns #-}
+
 module Core.Syntax where
 
 import Name

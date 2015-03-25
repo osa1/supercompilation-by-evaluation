@@ -1,17 +1,16 @@
-{-# LANGUAGE ViewPatterns, TupleSections, PatternGuards #-}
+{-# LANGUAGE PatternGuards, TupleSections #-}
 module Evaluator.Evaluate (step) where
 
 import Evaluator.Syntax
 
+import Core.Prelude (falseDataCon, trueDataCon)
 import Core.Renaming
 import Core.Syntax
-import Core.Prelude (trueDataCon, falseDataCon)
 
 import Renaming
 import Utilities
 
 import qualified Data.Map as M
-
 
 step :: State -> Maybe State
 step (h, k, (rn, TaggedTerm (Tagged tg e))) = case e of

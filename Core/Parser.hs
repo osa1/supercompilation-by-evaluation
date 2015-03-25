@@ -1,8 +1,8 @@
 {-# LANGUAGE PatternGuards, TupleSections, ViewPatterns #-}
 module Core.Parser (parse) where
 
-import Core.Syntax
 import Core.Prelude
+import Core.Syntax
 
 import Name hiding (freshName)
 import qualified Name
@@ -17,30 +17,35 @@ import Language.Preprocessor.Cpphs
 import System.Directory
 import System.FilePath (replaceExtension)
 
-
 parse :: FilePath -> IO (String, [(Var, Term)])
 parse path = do
     -- Read and pre-process .core file
     contents <- readFile path >>= cpp
     unless qUIET $ putStrLn contents
-    
+
     -- Read and pre-process corresponding .hs file (if any)
     let wrapper_path = replaceExtension path ".hs"
     has_wrapper <- doesFileExist wrapper_path
     wrapper <- if has_wrapper then readFile wrapper_path >>= cpp else return ""
-    
-    -- Return parsed .core file
-    return (wrapper,
-            moduleCore $ LHE.fromParseResult $ LHE.parseFileContentsWithMode
-              (LHE.defaultParseMode { LHE.parseFilename = path, LHE.extensions = [LHE.EnableExtension LHE.CPP, LHE.EnableExtension LHE.MagicHash] })
-              contents)
-  where cpp = runCpphs (defaultCpphsOptions { boolopts = (boolopts defaultCpphsOptions) { locations = False }, defines = ("SUPERCOMPILE", "1") : defines defaultCpphsOptions }) path
 
+    -- Return parsed .core file
+    return
+      ( wrapper
+      , moduleCore $ LHE.fromParseResult $ LHE.parseFileContentsWithMode
+          (LHE.defaultParseMode
+            { LHE.parseFilename = path,
+              LHE.extensions = [LHE.EnableExtension LHE.CPP, LHE.EnableExtension LHE.MagicHash] })
+          contents)
+  where
+    cpp = runCpphs (defaultCpphsOptions
+                      { boolopts = (boolopts defaultCpphsOptions) { locations = False },
+                        defines = ("SUPERCOMPILE", "1") : defines defaultCpphsOptions })
+                   path
 
 data ParseState = ParseState {
-    ids :: IdSupply,
-    dc_wrappers :: M.Map DataCon Var,
-    int_wrappers :: M.Map Integer Var,
+    ids           :: IdSupply,
+    dc_wrappers   :: M.Map DataCon Var,
+    int_wrappers  :: M.Map Integer Var,
     char_wrappers :: M.Map Char Var,
     prim_wrappers :: M.Map PrimOp Var
   }

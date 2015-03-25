@@ -99,7 +99,7 @@ runCompiled wrapper e test_e = withTempFile "Main" $ \(exe_file, exe_h) -> do
         hPutStr hs_h haskell
         hClose hs_h
         ghc_ver <- ghcVersion
-        time $ readProcessWithExitCode "ghc" (["--make", "-O2", hs_file, "-fforce-recomp", "-o", exe_file] ++ ["-ddump-simpl" | not qUIET] ++ ["-rtsopts" | ghc_ver >= [7]]) "" --  
+        time $ readProcessWithExitCode "ghc" (["--make", "-O2", hs_file, "-fforce-recomp", "-o", exe_file] ++ ["-ddump-simpl" | not qUIET] ++ ["-rtsopts" | ghc_ver >= [7]]) ""
     compiled_size <- fileSize exe_file
     case ec of
       ExitFailure _ -> putStrLn haskell >> return (haskell, Left compile_err)

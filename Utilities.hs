@@ -1,37 +1,37 @@
-{-# LANGUAGE TupleSections, PatternGuards, ExistentialQuantification #-}
+{-# LANGUAGE ExistentialQuantification, PatternGuards, TupleSections #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Utilities (
     module IdSupply,
     module Utilities,
-    
+
     module Control.Arrow,
     module Control.DeepSeq,
     module Control.Monad,
-    
+
     module Data.Maybe,
     module Data.List,
-    
+
     module Debug.Trace,
-    
+
     module Text.PrettyPrint.HughesPJClass
   ) where
 
 import IdSupply
 import StaticFlags
 
-import Control.Arrow (first, second, (***), (&&&))
-import Control.DeepSeq (NFData(..), rnf)
+import Control.Arrow (first, second, (&&&), (***))
+import Control.DeepSeq (NFData (..), rnf)
 import Control.Monad
 
-import Data.Maybe
 import Data.List
 import qualified Data.Map as M
+import Data.Maybe
 import qualified Data.Set as S
 import Data.Time.Clock.POSIX (getPOSIXTime)
 
 import Debug.Trace
 
-import Text.PrettyPrint.HughesPJClass hiding (render, int, char, first)
+import Text.PrettyPrint.HughesPJClass hiding (char, first, int, render)
 import qualified Text.PrettyPrint.HughesPJClass as Pretty
 
 import System.IO
@@ -164,7 +164,7 @@ removeOnes (x:xs) = xs : map (x:) (removeOnes xs)
 accumL :: (acc -> (acc, a)) -> acc -> Int -> (acc, [a])
 accumL f = go
   where
-    go acc n | n <= 0            = (acc, []) 
+    go acc n | n <= 0            = (acc, [])
              | (acc, x) <- f acc = second (x:) (go acc (n - 1))
 
 

@@ -14,10 +14,8 @@ import Utilities
 
 import qualified Data.Map as M
 
-
 type In a = a
 type Out a = a
-
 
 newtype Renaming = Renaming { unRenaming :: M.Map (In Name) (Out Name) }
                  deriving (Show)
@@ -49,8 +47,10 @@ safeRename :: String -> Renaming -> In Name -> Out Name
 safeRename = safeRename' . Just
 
 safeRename' :: Maybe String -> Renaming -> In Name -> Out Name
-safeRename' mb_stk rn n | Just n' <- rename_maybe rn n = n'
-                        | otherwise                    = error $ show (text "Name" <+> pPrint n <+> text "out of scope" <+> maybe empty (\stk -> text "in" <+> text stk) mb_stk <> text "! Renaming:" $$ pPrint rn)
+safeRename' mb_stk rn n
+  | Just n' <- rename_maybe rn n = n'
+  | otherwise                    =
+    error $ show (text "Name" <+> pPrint n <+> text "out of scope" <+> maybe empty (\stk -> text "in" <+> text stk) mb_stk <> text "! Renaming:" $$ pPrint rn)
 
 rename_maybe :: Renaming -> In Name -> Maybe (Out Name)
 rename_maybe rn n = M.lookup n (unRenaming rn)
@@ -76,4 +76,3 @@ renameRenaming rn_by = Renaming . M.mapMaybe (rename_maybe rn_by) . unRenaming
 
 foldRenaming :: (In Name -> Out Name -> b -> b) -> b -> Renaming -> b
 foldRenaming f b = M.foldWithKey f b . unRenaming
-

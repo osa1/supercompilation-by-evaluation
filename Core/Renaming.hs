@@ -1,4 +1,4 @@
-{-# LANGUAGE ViewPatterns, TupleSections #-}
+{-# LANGUAGE TupleSections, ViewPatterns #-}
 module Core.Renaming where
 
 import Core.Syntax
@@ -6,17 +6,17 @@ import Core.Syntax
 import Renaming
 import Utilities
 
-
 type In a = (Renaming, a)
 type Out a = a
 
-
-renameTagged :: (IdSupply -> Renaming -> a -> a) -> IdSupply -> Renaming -> Tagged a -> Tagged a
+renameTagged
+  :: (IdSupply -> Renaming -> a -> a) -> IdSupply -> Renaming -> Tagged a -> Tagged a
 renameTagged f ids rn (Tagged tg x) = Tagged tg (f ids rn x)
 
-renameTaggedBinder :: (IdSupply -> Renaming -> a -> (IdSupply, Renaming, a)) -> IdSupply -> Renaming -> Tagged a -> (IdSupply, Renaming, Tagged a)
+renameTaggedBinder
+  :: (IdSupply -> Renaming -> a -> (IdSupply, Renaming, a))
+  -> IdSupply -> Renaming -> Tagged a -> (IdSupply, Renaming, Tagged a)
 renameTaggedBinder f ids rn (Tagged tg x) = third3 (Tagged tg) $ f ids rn x
-
 
 renameIn :: (IdSupply -> Renaming -> a -> a) -> IdSupply -> In a -> a
 renameIn f ids (rn, x) = f ids rn x
