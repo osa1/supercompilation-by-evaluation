@@ -1,4 +1,4 @@
-{-# LANGUAGE ViewPatterns, TupleSections, PatternGuards, BangPatterns #-}
+{-# LANGUAGE BangPatterns, DeriveFunctor, PatternGuards, TupleSections #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 module Supercompile.Drive (supercompile) where
 
@@ -108,13 +108,14 @@ freshHName :: ScpM Var
 freshHName = ScpM $ \s -> (s { names = tail (names s) }, expectHead "freshHName" (names s))
 
 
-newtype ScpM a = ScpM { unScpM :: ScpState -> (ScpState, a) }
+newtype ScpM a = ScpM { unScpM :: ScpState -> (ScpState, a) } deriving (Functor)
 
-instance Functor ScpM where
-    fmap = liftM
+instance Applicative ScpM where
+    pure x = ScpM $ \s -> (s, x)
+    ScpM s1 <*> ScpM s2 =
+      ScpM $ \s -> case s1 s of (s', f) -> case s2 s' of (s'', x) -> (s'', f x)
 
 instance Monad ScpM where
-    return x = ScpM $ \s -> (s, x)
     (!mx) >>= fxmy = ScpM $ \s -> case unScpM mx s of (s, x) -> unScpM (fxmy x) s
 
 runScpM :: FreeVars -> ScpM (Out Term) -> Out Term

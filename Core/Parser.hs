@@ -1,4 +1,4 @@
-{-# LANGUAGE PatternGuards, TupleSections, ViewPatterns #-}
+{-# LANGUAGE DeriveFunctor, PatternGuards, TupleSections, ViewPatterns #-}
 module Core.Parser (parse) where
 
 import Core.Prelude
@@ -97,13 +97,14 @@ buildWrappers ps
     dataConArity "B"       = 0 -- KMP
     dataConArity s = panic "dataConArity" (text s)
 
-newtype ParseM a = ParseM { unParseM :: ParseState -> (ParseState, a) }
+newtype ParseM a = ParseM { unParseM :: ParseState -> (ParseState, a) } deriving (Functor)
 
-instance Functor ParseM where
-    fmap = liftM
+instance Applicative ParseM where
+    pure x = ParseM $ \s -> (s, x)
+    ParseM p1 <*> ParseM p2 =
+      ParseM $ \s -> case p1 s of (s', f) -> case p2 s' of (s'', x) -> (s'', f x)
 
 instance Monad ParseM where
-    return x = ParseM $ \s -> (s, x)
     mx >>= fxmy = ParseM $ \s -> case unParseM mx s of (s, x) -> unParseM (fxmy x) s
 
 freshName :: String -> ParseM Name

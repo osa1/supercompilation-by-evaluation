@@ -1,7 +1,9 @@
-{-# LANGUAGE FlexibleInstances, PatternGuards, TypeSynonymInstances,
-             ViewPatterns #-}
+{-# LANGUAGE DeriveGeneric, FlexibleInstances, PatternGuards,
+             TypeSynonymInstances, ViewPatterns #-}
 
 module Core.Syntax where
+
+import GHC.Generics
 
 import Name
 import Utilities
@@ -12,7 +14,7 @@ type Var = Name
 type DataCon = String
 
 data PrimOp = Add | Subtract | Multiply | Divide | Modulo | Equal | LessThan | LessThanEqual
-            deriving (Eq, Ord, Show)
+            deriving (Eq, Ord, Show, Generic)
 
 data AltCon = DataAlt DataCon [Var] | LiteralAlt Literal | DefaultAlt (Maybe Var)
             deriving (Eq, Show)

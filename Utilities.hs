@@ -1,4 +1,5 @@
-{-# LANGUAGE ExistentialQuantification, PatternGuards, TupleSections #-}
+{-# LANGUAGE ExistentialQuantification, PackageImports, PatternGuards,
+             TupleSections #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Utilities (
     module IdSupply,
@@ -31,8 +32,8 @@ import Data.Time.Clock.POSIX (getPOSIXTime)
 
 import Debug.Trace
 
-import Text.PrettyPrint.HughesPJClass hiding (char, first, int, render)
-import qualified Text.PrettyPrint.HughesPJClass as Pretty
+import "pretty" Text.PrettyPrint.HughesPJClass hiding (char, first, int, render)
+import qualified "pretty" Text.PrettyPrint.HughesPJClass as Pretty
 
 import System.IO
 import System.IO.Unsafe (unsafePerformIO)
@@ -285,10 +286,6 @@ safeHead (x:_) = Just x
 
 expectHead :: String -> [a] -> a
 expectHead s = expectJust s . safeHead
-
-uncons :: [a] -> Maybe (a, [a])
-uncons []     = Nothing
-uncons (x:xs) = Just (x, xs)
 
 fixpoint :: Eq a => (a -> a) -> a -> a
 fixpoint f x
